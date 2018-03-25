@@ -1,6 +1,6 @@
 [package]
 name = "phoenix-channels"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Goran Sterjov <git@goran.email>"]
 description = "A websocket client library for Phoenix channels"
 repository = "https://github.com/gsterjov/phoenix-channels-rs"
