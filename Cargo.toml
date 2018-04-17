@@ -1,6 +1,6 @@
 [package]
 name = "phoenix-channels"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Goran Sterjov <git@goran.email>"]
 description = "A websocket client library for Phoenix channels"
 repository = "https://github.com/gsterjov/phoenix-channels-rs"
@@ -10,6 +10,8 @@ categories = ["network-programming", "web-programming", "web-programming::websoc
 license = "LGPL-3.0"
 
 [dependencies]
+slog = "2.2.1"
+slog-stdlog = "3.0.2"
 websocket = "0.20.2"
 serde = "1.0"
 serde_derive = "1.0"

@@ -3,6 +3,10 @@ use std::time::Duration;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc;
 
+use slog;
+use slog_stdlog;
+use slog::Drain;
+
 use websocket::client::ClientBuilder;
 
 use receiver::Receiver;
@@ -38,7 +42,9 @@ impl From<JoinError> for ClientError {
 
 
 
-pub fn connect(url: &str, params: Vec<(&str, &str)>) -> Result<(Sender, Receiver), ConnectError> {
+pub fn connect(url: &str, params: Vec<(&str, &str)>, logger: Option<slog::Logger>) -> Result<(Sender, Receiver), ConnectError> {
+    let logger = logger.unwrap_or(slog::Logger::root(slog_stdlog::StdLog.fuse(), o!()));
+
     // convert the params to a uri component string
     let mut params_uri: String = "".to_owned();
     for (k, v) in params {
@@ -54,22 +60,26 @@ pub fn connect(url: &str, params: Vec<(&str, &str)>) -> Result<(Sender, Receiver
     let socket_client = client_builder.connect_insecure()?;
     let (reader, writer) = socket_client.split()?;
 
-    let sender = Sender::new(writer);
-    let receiver = Receiver::new(reader);
+    let sender = Sender::new(writer, logger.new(o!("type" => "sender")));
+    let receiver = Receiver::new(reader, logger.new(o!("type" => "receiver")));
 
     return Ok((sender, receiver));
 }
 
 
 pub struct Client {
+    logger: slog::Logger,
     sender_ref: Arc<Mutex<Sender>>,
     heartbeat_handle: thread::JoinHandle<()>,
     message_processor_handle: thread::JoinHandle<()>,
 }
 
 impl Client {
-    pub fn new(url: &str, params: Vec<(&str, &str)>) -> Result<(Client, mpsc::Receiver<MessageResult>), ClientError> {
-        let (sender, receiver) = connect(url, params)?;
+    pub fn new(url: &str, params: Vec<(&str, &str)>, logger: Option<slog::Logger>) -> Result<(Client, mpsc::Receiver<MessageResult>), ClientError> {
+        let logger = logger.unwrap_or(slog::Logger::root(slog_stdlog::StdLog.fuse(), o!()));
+        debug!(logger, "creating client"; "url" => url);
+
+        let (sender, receiver) = connect(url, params, Some(logger.clone()))?;
 
         let (tx, rx) = mpsc::channel();
 
@@ -78,6 +88,7 @@ impl Client {
         let message_processor = Client::process_messages(receiver, tx);
 
         let client = Client {
+            logger: logger,
             sender_ref: sender_ref,
             heartbeat_handle: heartbeat,
             message_processor_handle: message_processor,

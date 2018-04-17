@@ -1,3 +1,4 @@
+use slog;
 use websocket::receiver::Reader;
 use websocket::stream::sync::TcpStream;
 
@@ -7,12 +8,14 @@ use error::MessageError;
 
 pub struct Receiver
 {
+    logger: slog::Logger,
     reader: Reader<TcpStream>,
 }
 
 impl Receiver {
-    pub fn new(reader: Reader<TcpStream>) -> Receiver {
+    pub fn new(reader: Reader<TcpStream>, logger: slog::Logger) -> Receiver {
         Receiver {
+            logger: logger,
             reader: reader,
         }
     }

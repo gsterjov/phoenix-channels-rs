@@ -1,3 +1,7 @@
+#[macro_use]
+pub extern crate slog ;
+extern crate slog_stdlog;
+
 extern crate websocket;
 
 extern crate serde;

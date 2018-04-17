@@ -8,6 +8,7 @@ and as such should be treated as experimental.
 Currently there are two ways to use this library. The first is a high level threaded client
 and the second is a low level sender/receiver.
 
+
 ### Connecting via the client
 
 Connecting via the client will return a tuple with the `Client` struct and a `mpsc::Receiver` of
@@ -27,7 +28,7 @@ let url = "ws://localhost:4000/socket";
 let token = "abcde12345";
 let params = vec![("token", token)];
 
-let (client, messages) = client::Client::new(url, params).unwrap();
+let (client, messages) = client::Client::new(url, params, None).unwrap();
 
 thread::spawn(move || {
     for message in messages {
@@ -65,7 +66,7 @@ let url = "ws://localhost:4000/socket";
 let token = "abcde12345";
 let params = vec![("token", token)];
 
-let (mut sender, receiver) = client::connect(url, params).unwrap();
+let (mut sender, receiver) = client::connect(url, params, None).unwrap();
 
 sender.join("room:lobby").unwrap();
 
@@ -84,3 +85,10 @@ for message in receiver {
 
 Using the lower level API requires more work but it gives you full control over the threading and flow of
 messages being sent and received to the server.
+
+
+### Logging
+
+Both the high level and low level APIs use slog under the hood for structured logging. To enable this
+you can pass your logger via both `connect` and `Client::new` by specifying `Some(logger)` where the
+examples currently specify `None`.
